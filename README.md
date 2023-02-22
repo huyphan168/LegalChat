@@ -1,41 +1,23 @@
-# 🦜️🔗 ChatLangChain
-
-This repo is an implementation of a locally hosted chatbot specifically focused on question answering over the [LangChain documentation](https://langchain.readthedocs.io/en/latest/).
-Built with [LangChain](https://github.com/hwchase17/langchain/) and [FastAPI](https://fastapi.tiangolo.com/).
-
+# 🔗 Chat with Legal Documents
+This repo is an implementation of a locally hosted chatbot specifically focused on question answering over the European Banking Authority. Built with LangChain and FastAPI.
 The app leverages LangChain's streaming support and async API to update the page in real time for multiple users.
+## UI/UX
+1. The app is built with basic HTML template with JinJa2 templating engine. The app is served by FastAPI.
 
-## ✅ Running locally
-1. Install dependencies: `pip install -r requirements.txt`
-1. Run `ingest.sh` to ingest LangChain docs data into the vectorstore (only needs to be done once).
-   1. You can use other [Document Loaders](https://langchain.readthedocs.io/en/latest/modules/document_loaders.html) to load your own data into the vectorstore.
-1. Run the app: `make start`
+<img src="assets/images/EBA_demo.png" width="1000" height="650">
+
+## Running locally
+1. Install dependencies: `pip install -r requirements.txt` and `export OPENAI_API_KEY=YOUR_OPENAI_KEY` for the app to work.
+2. Add your documents in excel files with consistent format in folder `eba_documents/`
+3. Run `python3 ingest_eba.py` to ingest EBA docs data into the vectorstore (only needs to be done once), if you want to update, just add new docs and run it again.
+4. Run the app: `make start`
    1. To enable tracing, make sure `langchain-server` is running locally and pass `tracing=True` to `get_chain` in `main.py`. You can find more documentation [here](https://langchain.readthedocs.io/en/latest/tracing.html).
-1. Open [localhost:9000](http://localhost:9000) in your browser.
+5. Open [localhost:9000](http://localhost:9000) in your browser.
 
-## 🚀 Important Links
+## Details on Implementation
+1. The app is built with basic HTML template with JinJa2 templating engine. The app is served by FastAPI.
+2. The app uses LangChain to connect vectorstore with OpenAI API `text-davinci-003` to generate text.
+3. The vectorstore is indexed using `embedding-ada-002` with very cheap price per 1k tokens and saved in vectorstore.pkl pickle file using FAISS.
+4. The prompt is a Few-shot examples containing 2 question-answer pairs and 4 retrieved documents.
+5. Input Aggregator currently is quite simple. Just concatenate additional fields with the prompt (followed by the name of each meta-data field).
 
-Deployed version (to be updated soon): [chat.langchain.dev](https://chat.langchain.dev)
-
-Hugging Face Space (to be updated soon): [huggingface.co/spaces/hwchase17/chat-langchain](https://huggingface.co/spaces/hwchase17/chat-langchain)
-
-Blog Posts: 
-* [Initial Launch](https://blog.langchain.dev/langchain-chat/)
-* [Streaming Support](https://blog.langchain.dev/streaming-support-in-langchain/)
-
-## 📚 Technical description
-
-There are two components: ingestion and question-answering.
-
-Ingestion has the following steps:
-
-1. Pull html from documentation site
-2. Load html with LangChain's [ReadTheDocs Loader](https://langchain.readthedocs.io/en/latest/modules/document_loaders/examples/readthedocs_documentation.html)
-3. Split documents with LangChain's [TextSplitter](https://langchain.readthedocs.io/en/latest/modules/utils/combine_docs_examples/textsplitter.html)
-4. Create a vectorstore of embeddings, using LangChain's [vectorstore wrapper](https://langchain.readthedocs.io/en/latest/modules/utils/combine_docs_examples/vectorstores.html) (with OpenAI's embeddings and FAISS vectorstore).
-
-Question-Answering has the following steps, all handled by [ChatVectorDBChain](https://langchain.readthedocs.io/en/latest/modules/chains/combine_docs_examples/chat_vector_db.html):
-
-1. Given the chat history and new user input, determine what a standalone question would be (using GPT-3).
-2. Given that standalone question, look up relevant documents from the vectorstore.
-3. Pass the standalone question and relevant documents to GPT-3 to generate a final answer.

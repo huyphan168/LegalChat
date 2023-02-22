@@ -12,9 +12,25 @@ from callback import QuestionGenCallbackHandler, StreamingLLMCallbackHandler
 from query_data import get_chain
 from schemas import ChatResponse
 
+import json
+
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 vectorstore: Optional[VectorStore] = None
+
+def input_aggregator(question, metadata):
+    template = f"{question}"
+    if metadata["topic"] != "":
+        template += f"with topic: {metadata['topic']}"
+    if metadata["context"] != "":
+        template += f"context of the question {metadata['context']}"
+    if metadata["legalAct"] != "":
+        template += f"in legal act: {metadata['legalAct']}"
+    if metadata["article"] != "":
+        template += f"in article: {metadata['article']}"
+    if metadata["comDelegated"] != "":
+        template += f"with com delegated: {metadata['comDelegated']}"
+    return template
 
 
 @app.on_event("startup")
@@ -25,6 +41,9 @@ async def startup_event():
     with open("vectorstore.pkl", "rb") as f:
         global vectorstore
         vectorstore = pickle.load(f)
+    with open("sample_vectorstore.pkl", "rb") as k:
+        global sample_vectorstore
+        sample_vectorstore = pickle.load(k)
 
 
 @app.get("/")
@@ -37,16 +56,18 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     question_handler = QuestionGenCallbackHandler(websocket)
     stream_handler = StreamingLLMCallbackHandler(websocket)
-    chat_history = []
-    qa_chain = get_chain(vectorstore, question_handler, stream_handler)
-    # Use the below line instead of the above line to enable tracing
-    # Ensure `langchain-server` is running
-    # qa_chain = get_chain(vectorstore, question_handler, stream_handler, tracing=True)
+    qa_chain = get_chain(vectorstore, sample_vectorstore, question_handler, stream_handler)
 
     while True:
         try:
             # Receive and send back the client message
-            question = await websocket.receive_text()
+            data = await websocket.receive_text()
+            data = json.loads(data)
+            question = data["message"]
+            metadata = {}
+            for key in data.keys():
+                if key != "message":
+                    metadata[key] = data[key]
             resp = ChatResponse(sender="you", message=question, type="stream")
             await websocket.send_json(resp.dict())
 
@@ -55,9 +76,8 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.send_json(start_resp.dict())
 
             result = await qa_chain.acall(
-                {"question": question, "chat_history": chat_history}
+                {"question": input_aggregator(question, metadata)}
             )
-            chat_history.append((question, result["answer"]))
 
             end_resp = ChatResponse(sender="bot", message="", type="end")
             await websocket.send_json(end_resp.dict())

@@ -6,8 +6,14 @@
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
     <style>
         .chat-body {
-            width: 550px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 1000px;
             margin: 50px auto;
+        }
+        .chat-box {
+            width: 550px;
         }
         .card-body {
             background-color: #333;
@@ -28,16 +34,19 @@
         }
         .form-inline {
             display: flex;
+            flex-direction: column;
             justify-content: space-between;
+            height: 500px;
+            width: 400px;
         }
         .form-control {
-            width: 80%;
+            width: 100%;
             background-color: #333;
             color: #fff;
             border: none;
             border-radius: 5px;
             padding: 10px;
-            margin-right: 10px;
+            margin-bottom: 10px;
         }
         #send {
             background-color: #4C4CFF;
@@ -110,31 +119,83 @@
         function sendMessage(event) {
             event.preventDefault();
             var message = document.getElementById('messageText').value;
+            var legalAct = document.getElementById('legal-act').value;
+            var topic = document.getElementById('topic').value;
+            var article = document.getElementById('article').value;
+            var context = document.getElementById('context').value;
+            var comDelegated = document.getElementById('com-delegated').value;
             if (message === "") {
                 return;
             }
-            ws.send(message);
+            var data = {
+                "message": message,
+                "legalAct": legalAct,
+                "topic": topic,
+                "article": article,
+                "context": context,
+                "comDelegated": comDelegated
+            };
+            ws.send(JSON.stringify(data));
             document.getElementById('messageText').value = "";
-
+            // document.getElementById('legal-act').value = "";
+            // document.getElementById('topic').value = "";
+            // document.getElementById('article').value = "";
+            // document.getElementById('keywords').value = "";
+            // document.getElementById('com-delegated').value = "";
+    
             // Turn the button into a loading button
             var button = document.getElementById('send');
             button.innerHTML = "Loading...";
             button.disabled = true;
         }
+        // function sendMessage(event) {
+        //     event.preventDefault();
+        //     var message = document.getElementById('messageText').value;
+        //     if (message === "") {
+        //         return;
+        //     }
+        //     ws.send(message);
+        //     document.getElementById('messageText').value = "";
+
+        //     // Turn the button into a loading button
+        //     var button = document.getElementById('send');
+        //     button.innerHTML = "Loading...";
+        //     button.disabled = true;
+        // }
     </script>
 </head>
-<body class="bg-black">
+<body bgcolor="#dae4fd"></body>
     <div class="chat-body card">
-        <div class="card-body p-5">
-            <h4 class="card-title text-center text-xl font-medium"> Chat Your Data </h4>
-            <p class="card-text text-center text-sm" id="header"> Ask a question </p>
-            <hr class="border-gray-500 mb-5" style="margin-top: 20px;">
-            <div id="messages" class="overflow-auto" style="max-height: 500px;">
+        <div class="chat-column">
+            <div class="card-body p-5">
+                <h4 class="card-title text-center text-xl font-medium"> European Legal Banking QA System </h4>
+                <p class="card-text text-center text-sm" id="header"> Ask a question </p>
+                <hr class="border-gray-500 mb-5" style="margin-top: 20px;">
+                <div id="messages" class="overflow-auto" style="max-height: 500px;">
+                </div>
+                <form action="" class="form-inline mt-5" id="chat-form" onsubmit="sendMessage(event)">
+                    <input type="text" class="form-control" placeholder="Write your question" id="messageText">
+                    <button id="send" type="submit" class="btn btn-primary">Send</button>
+                </form>
             </div>
-            <form action="" class="form-inline mt-5" id="chat-form" onsubmit="sendMessage(event)">
-                <input type="text" class="form-control" placeholder="Write your question" id="messageText">
-                <button id="send" type="submit" class="btn btn-primary">Send</button>
-            </form>
+        </div>
+        <div class="input-fields p-5">
+            <form action="" class="form-inline" id="input-form">
+                    <h4 class="card-title text-center text-xl font-medium"> Additional Information </h4>
+                    <hr class="border-gray-500 mb-5" style="margin-top: 20px;">
+                    <form>
+                        <label for="legal-act">Legal Act:</label>
+                        <input type="text" class="form-control" placeholder="Legal Act" id="legal-act">
+                        <label for="topic">Topic:</label>
+                        <input type="text" class="form-control" placeholder="Topic" id="topic">
+                        <label for="article">Article:</label>
+                        <input type="text" class="form-control" placeholder="Article" id="article">
+                        <label for="context">Context:</label>
+                        <input type="text" class="form-control" placeholder="Context" id="context">
+                        <label for="com-delegated">COM Delegated or Implementing Acts:</label>
+                        <input type="text" class="form-control" placeholder="COM Delegated or Implementing Acts" id="com-delegated">
+                    </form>
+                </form>
         </div>
     </div>
 </body>
