@@ -4,7 +4,7 @@ The app leverages LangChain's streaming support and async API to update the page
 ## UI/UX
 1. The app is built with basic HTML template with JinJa2 templating engine. The app is served by FastAPI.
 
-<img src="assets/images/EBA_demo.png" width="1000" height="650">
+<img src="assets/images/EBA_demo.png" width="1000" height="450">
 
 ## Running locally
 1. Install dependencies: `pip install -r requirements.txt` and `export OPENAI_API_KEY=YOUR_OPENAI_KEY` for the app to work.
